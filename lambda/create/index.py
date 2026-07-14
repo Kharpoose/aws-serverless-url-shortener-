@@ -16,15 +16,19 @@ def generate_short_id(length=6):
 
 
 def lambda_handler(event, context):
+    try:
+        body = json.loads(event.get("body", "{}"))
+    except json.JSONDecodeError:
+        return {
+            "statusCode": 400,
+            "body": json.dumps({"message": "Invalid JSON"})
+        }
 
-    original_url = event.get("url")
-
+    original_url = body.get("url")
     if not original_url:
         return {
             "statusCode": 400,
-            "body": json.dumps({
-                "message": "url is required"
-            })
+            "body": json.dumps({"message": "url is required"})
         }
 
     short_id = generate_short_id()
@@ -38,13 +42,10 @@ def lambda_handler(event, context):
             }
         )
     except Exception as e:
-    print(f"Error saving item to DynamoDB: {e}")
-
+        print(f"Error saving item to DynamoDB: {e}")
         return {
             "statusCode": 500,
-            "body": json.dumps({
-                "message": "Failed to save URL"
-            })
+            "body": json.dumps({"message": "Failed to save URL"})
         }
 
     return {
